@@ -1,9 +1,16 @@
+const webpack = require('webpack');
 const path = require('path');
 const CleanWebpackPlugin = require('clean-webpack-plugin');
+const ExtractTextPlugin = require("extract-text-webpack-plugin");
+const uglify = require('uglifyjs-webpack-plugin');
+
+const extractCSS = new ExtractTextPlugin('css/[name]-self.css');
+const extractLESS = new ExtractTextPlugin('css/[name]-common.css');
+
 module.exports = {
   output: {
     path: __dirname + "/build",
-    filename: "[name].[chunkhash:8].js",
+    filename: "[name].js",
   },
   module: {
     rules: [
@@ -14,7 +21,10 @@ module.exports = {
           loader: 'babel-loader',
           options: {
             presets: ['@babel/preset-react'],
-            plugins: ['@babel/plugin-proposal-class-properties']
+            plugins: [
+              '@babel/plugin-proposal-class-properties',
+              ['import', { "libraryName": "antd", "style": true }]
+            ],
           }
         }
       },
@@ -29,21 +39,44 @@ module.exports = {
       },
       {
         test: /\.css$/,
-        use: [{ loader: 'style-loader' }, { loader: 'css-loader' }]
+        use: extractCSS.extract(['css-loader'])
       },
       {
-        test: /\.(sass|scss)$/,
-        use: [{
-          loader: 'style-loader'
-        }, {
-          loader: 'css-loader'
-        }, {
-          loader: 'sass-loader'
-        }]
+        test: /\.scss$/,
+        use: ExtractTextPlugin.extract({
+          fallback: 'style-loader',
+          use: ['css-loader', 'sass-loader']
+        })
       },
+      {
+        test: /\.less$/i,
+        use: extractLESS.extract({
+          use: [{
+            loader: "css-loader"
+          }, {
+            loader: "less-loader",
+            options: { javascriptEnabled: true }
+          }],
+          fallback: "style-loader"
+        })
+      }
     ]
+  },
+  optimization: {
+    splitChunks: {
+      cacheGroups: {
+        commons: {
+          name: "commons",
+          chunks: "initial",
+          minChunks: 2
+        }
+      }
+    }
   },
   plugins: [
     new CleanWebpackPlugin(['build']),
+    new uglify(),
+    extractCSS,
+    extractLESS
   ],
 }
