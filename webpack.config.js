@@ -18,7 +18,7 @@ module.exports = {
             presets: ['@babel/preset-react'],
             plugins: [
               '@babel/plugin-proposal-class-properties',
-              ['import', { "libraryName": "antd", "style": true }]
+              ['import', { libraryName: "antd", style: 'css' }]
             ],
           }
         }
@@ -50,7 +50,10 @@ module.exports = {
             loader: "css-loader"
           }, {
             loader: "less-loader",
-            options: { javascriptEnabled: true }
+            options: { 
+              modules: false,
+              modifyVars: { "@primary-color": "'#1DA57A'" },
+             }
           }],
           fallback: "style-loader"
         })
